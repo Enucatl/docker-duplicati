@@ -1,0 +1,49 @@
+services:
+  duplicati:
+    image: duplicati/duplicati:latest
+    container_name: duplicati
+    restart: unless-stopped
+    userns_mode: host
+    environment:
+      - TZ=Europe/Zurich
+      - DUPLICATI_PRELOAD_SETTINGS=/run/secrets/duplicati_preload_settings
+      - DUPLICATI_PRELOAD_SETTINGS_DEBUG=1
+      - DUPLICATI__DISABLE_DB_ENCRYPTION=false
+      - DUPLICATI__WEBSERVICE_ALLOWED_HOSTNAMES=duplicati.${DOCKER_DOMAIN}
+
+    secrets:
+      - duplicati_preload_settings
+
+    volumes:
+      # 1. CONFIGURATION:
+      - configuration:/data
+
+      # 2. SOURCE DATA (Host Mapping):
+      - /var/lib/docker/100000.100000/volumes/:/source/var/lib/docker/100000.100000/volumes/:ro
+      - /scratch/backup:/source/scratch/backup:ro
+      - /export/Documents:/source/export/Documents:ro
+
+    labels:
+      - "checkmk_monitor=true"
+      - "traefik.enable=true"
+      - "traefik.http.routers.duplicati.rule=Host(`duplicati.${DOCKER_DOMAIN}`)"
+      - "traefik.http.routers.duplicati.entrypoints=https"
+      - "traefik.http.routers.duplicati.tls=true"
+      - "traefik.http.routers.duplicati.service=duplicati"
+      - "traefik.http.routers.duplicati.middlewares=authelia@docker"
+      - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
+
+    networks:
+      - traefik_proxy
+
+
+volumes:
+  configuration:
+
+networks:
+  traefik_proxy:
+    external: true
+
+secrets:
+  duplicati_preload_settings:
+    file: secrets/preload.json
