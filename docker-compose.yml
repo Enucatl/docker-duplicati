@@ -1,9 +1,16 @@
 services:
   duplicati:
+    extends:
+      file: ../compose-security-baseline/hardening.yml
+      service: limits-large
     image: duplicati/duplicati:latest
     container_name: duplicati
     restart: unless-stopped
+    # userns_mode: host is required for backing up remapped Docker volume paths.
     userns_mode: host
+    cpu_shares: 128
+    security_opt:
+      - no-new-privileges:true
     environment:
       - TZ=Europe/Zurich
       - DUPLICATI_PRELOAD_SETTINGS=/run/secrets/duplicati_preload_settings
