@@ -7,7 +7,7 @@ Backrest/restic backup service for the selected Docker and host data paths.
 This Compose project runs Backrest with a fresh restic repository at:
 
 ```text
-b2:enucatl-backups/restic
+b2:enucatl-backups:restic
 ```
 
 The image is pinned by digest in `docker-compose.yml`. To upgrade Backrest, resolve the current digest for the desired tag and update the image reference explicitly:
@@ -72,6 +72,8 @@ The service keeps the shared `docker-compose-security-baseline` limits, `no-new-
 
 `userns_mode: host` is intentional because Backrest must read userns-remapped Docker volume data under `/var/lib/docker/100000.100000`.
 
+The Backrest service runs as UID/GID `175200003`, matching the owner of `/export/Documents` over Kerberized NFS so `root_squash` does not block reads of owner-only files. A one-shot `backrest-init` service owns the named state volumes for that UID before Backrest starts.
+
 The service does not use privileged mode, does not mount the Docker socket, and does not mount host root.
 
 ## Operations
@@ -91,7 +93,7 @@ docker compose up -d
 After first start:
 
 1. Confirm `backrest.${DOCKER_DOMAIN}` loads through Authelia.
-2. Let Backrest initialize `b2:enucatl-backups/restic`.
+2. Let Backrest initialize `b2:enucatl-backups:restic`.
 3. Run the `docker` plan manually once.
 4. Verify a snapshot exists.
 5. Restore at least one small file to a temporary path before relying on the migration.

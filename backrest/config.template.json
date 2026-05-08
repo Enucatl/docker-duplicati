@@ -5,7 +5,7 @@
   "repos": [
     {
       "id": "b2-enucatl-restic",
-      "uri": "b2:enucatl-backups/restic",
+      "uri": "b2:enucatl-backups:restic",
       "password": "__BACKREST_REPO_PASSWORD__",
       "env": [
         "B2_ACCOUNT_ID=__BACKREST_B2_ACCOUNT_ID__",

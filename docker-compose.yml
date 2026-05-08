@@ -1,4 +1,19 @@
 services:
+  backrest-init:
+    image: ghcr.io/garethgeorge/backrest@sha256:9c9966b5c285ec791a6b06cb4545fa0247424d05442e12f9558b4322d9f8a15f
+    restart: "no"
+    userns_mode: host
+    network_mode: none
+    command:
+      - /bin/sh
+      - -c
+      - chown -R 175200003:175200003 /data /config /cache /tmp
+    volumes:
+      - data:/data
+      - configuration:/config
+      - cache:/cache
+      - tmp:/tmp
+
   backrest:
     extends:
       file: ../compose-security-baseline/hardening.yml
@@ -7,9 +22,13 @@ services:
     restart: unless-stopped
     # userns_mode: host is required for backing up remapped Docker volume paths.
     userns_mode: host
+    user: "175200003:175200003"
     cpu_shares: 128
     security_opt:
       - no-new-privileges:true
+    depends_on:
+      backrest-init:
+        condition: service_completed_successfully
     environment:
       - TZ=Europe/Zurich
       - BACKREST_PORT=0.0.0.0:9898
