@@ -1,10 +1,9 @@
 services:
-  duplicati:
+  backrest:
     extends:
       file: ../compose-security-baseline/hardening.yml
       service: limits-large
-    image: duplicati/duplicati:latest
-    container_name: duplicati
+    image: ghcr.io/garethgeorge/backrest@sha256:9c9966b5c285ec791a6b06cb4545fa0247424d05442e12f9558b4322d9f8a15f
     restart: unless-stopped
     # userns_mode: host is required for backing up remapped Docker volume paths.
     userns_mode: host
@@ -13,44 +12,66 @@ services:
       - no-new-privileges:true
     environment:
       - TZ=Europe/Zurich
-      - DUPLICATI_PRELOAD_SETTINGS=/run/secrets/duplicati_preload_settings
-      - DUPLICATI_PRELOAD_SETTINGS_DEBUG=1
-      - DUPLICATI__DISABLE_DB_ENCRYPTION=false
-      - DUPLICATI__WEBSERVICE_ALLOWED_HOSTNAMES=duplicati.${DOCKER_DOMAIN}
+      - BACKREST_PORT=0.0.0.0:9898
+      - BACKREST_DATA=/data
+      - BACKREST_CONFIG=/config/config.json
+      - XDG_CACHE_HOME=/cache
+      - TMPDIR=/tmp
 
     secrets:
-      - duplicati_preload_settings
+      - backrest_b2_account_id
+      - backrest_b2_account_key
+      - backrest_repo_password
+
+    command:
+      - /bin/sh
+      - /bootstrap/render-config.sh
 
     volumes:
-      # 1. CONFIGURATION:
-      - configuration:/data
+      # 1. STATE:
+      - data:/data
+      - configuration:/config
+      - cache:/cache
+      - tmp:/tmp
 
-      # 2. SOURCE DATA (Host Mapping):
-      - /var/lib/docker/100000.100000/volumes/:/source/var/lib/docker/100000.100000/volumes/:ro
-      - /scratch/backup:/source/scratch/backup:ro
+      # 2. BOOTSTRAP:
+      - ./backrest/config.template.json:/bootstrap/config.template.json:ro
+      - ./backrest/render-config.sh:/bootstrap/render-config.sh:ro
+
+      # 3. SOURCE DATA (exact host paths only):
+      - /var/lib/docker/100000.100000/volumes/paperless-ai_export/_data:/source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data:ro
+      - /var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json:/source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json:ro
+      - /scratch/backup/vault:/source/scratch/backup/vault:ro
       - /export/Documents:/source/export/Documents:ro
 
     labels:
       - "checkmk_monitor=true"
       - "traefik.enable=true"
-      - "traefik.http.routers.duplicati.rule=Host(`duplicati.${DOCKER_DOMAIN}`)"
-      - "traefik.http.routers.duplicati.entrypoints=https"
-      - "traefik.http.routers.duplicati.tls=true"
-      - "traefik.http.routers.duplicati.service=duplicati"
-      - "traefik.http.routers.duplicati.middlewares=authelia@docker"
-      - "traefik.http.services.duplicati.loadbalancer.server.port=8200"
+      - "traefik.http.routers.backrest.rule=Host(`backrest.${DOCKER_DOMAIN}`)"
+      - "traefik.http.routers.backrest.entrypoints=https"
+      - "traefik.http.routers.backrest.tls=true"
+      - "traefik.http.routers.backrest.service=backrest"
+      - "traefik.http.routers.backrest.middlewares=authelia@docker"
+      - "traefik.http.services.backrest.loadbalancer.server.port=9898"
 
     networks:
       - traefik_proxy
 
 
 volumes:
+  data:
   configuration:
+  cache:
+  tmp:
 
 networks:
   traefik_proxy:
     external: true
 
 secrets:
-  duplicati_preload_settings:
-    file: secrets/preload.json
+  backrest_b2_account_id:
+    file: secrets/backrest_b2_account_id
+  backrest_b2_account_key:
+    file: secrets/backrest_b2_account_key
+  backrest_repo_password:
+    file: secrets/backrest_repo_password

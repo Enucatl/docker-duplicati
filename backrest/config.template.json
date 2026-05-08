@@ -1,0 +1,40 @@
+{
+  "modno": 0,
+  "version": 6,
+  "instance": "backrest",
+  "repos": [
+    {
+      "id": "b2-enucatl-restic",
+      "uri": "b2:enucatl-backups/restic",
+      "password": "__BACKREST_REPO_PASSWORD__",
+      "env": [
+        "B2_ACCOUNT_ID=__BACKREST_B2_ACCOUNT_ID__",
+        "B2_ACCOUNT_KEY=__BACKREST_B2_ACCOUNT_KEY__"
+      ],
+      "autoInitialize": true
+    }
+  ],
+  "plans": [
+    {
+      "id": "docker",
+      "repo": "b2-enucatl-restic",
+      "paths": [
+        "/source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data",
+        "/source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json",
+        "/source/scratch/backup/vault",
+        "/source/export/Documents"
+      ],
+      "schedule": {
+        "cron": "0 0 * * 1",
+        "clock": "CLOCK_LOCAL"
+      },
+      "retention": {
+        "policyKeepLastN": 1
+      },
+      "skipIfUnchanged": true
+    }
+  ],
+  "auth": {
+    "disabled": true
+  }
+}

@@ -1,5 +1,5 @@
-# docker-duplicati
-configure my backups on duplicati
+# docker-backrest
+configure my backups on backrest/restic
 
 ## Security baseline
 
