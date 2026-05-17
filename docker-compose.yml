@@ -58,10 +58,32 @@ services:
       - ./backrest/render-config.sh:/bootstrap/render-config.sh:ro
 
       # 3. SOURCE DATA (exact host paths only):
-      - /var/lib/docker/100000.100000/volumes/paperless-ai_export/_data:/source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data:ro
-      - /var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json:/source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json:ro
-      - /scratch/backup/vault:/source/scratch/backup/vault:ro
-      - /export/Documents:/source/export/Documents:ro
+      # /export/Documents is an NFS mount from a machine that is not always on.
+      # Do not let Docker create placeholder host paths when sources are absent.
+      - type: bind
+        source: /var/lib/docker/100000.100000/volumes/paperless-ai_export/_data
+        target: /source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json
+        target: /source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /scratch/backup/vault
+        target: /source/scratch/backup/vault
+        read_only: true
+        bind:
+          create_host_path: false
+      - type: bind
+        source: /export/Documents
+        target: /source/export/Documents
+        read_only: true
+        bind:
+          create_host_path: false
 
     labels:
       - "checkmk_monitor=true"
