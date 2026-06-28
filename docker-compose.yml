@@ -7,7 +7,7 @@ services:
     command:
       - /bin/sh
       - -c
-      - chown -R 175200003:175200003 /data /config /cache /tmp
+      - chown -R 175200010:175200010 /data /config /cache /tmp
     volumes:
       - data:/data
       - configuration:/config
@@ -22,7 +22,7 @@ services:
     restart: unless-stopped
     # userns_mode: host is required for backing up remapped Docker volume paths.
     userns_mode: host
-    user: "175200003:175200003"
+    user: "175200010:175200010"
     cpu_shares: 128
     security_opt:
       - no-new-privileges:true

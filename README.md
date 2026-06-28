@@ -72,7 +72,7 @@ The service keeps the shared `docker-compose-security-baseline` limits, `no-new-
 
 `userns_mode: host` is intentional because Backrest must read userns-remapped Docker volume data under `/var/lib/docker/100000.100000`.
 
-The Backrest service runs as UID/GID `175200003`, matching the owner of `/export/Documents` over Kerberized NFS so `root_squash` does not block reads of owner-only files. A one-shot `backrest-init` service owns the named state volumes for that UID before Backrest starts.
+The Backrest service runs as the dedicated FreeIPA UID/GID `175200010`, which has read access to `/export/Documents` over Kerberized NFS. A one-shot `backrest-init` service owns the named state volumes for that UID before Backrest starts.
 
 The service does not use privileged mode, does not mount the Docker socket, and does not mount host root.
 
