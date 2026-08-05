@@ -26,16 +26,24 @@ No host port is published directly.
 
 ## Backup Scope
 
-The configured Backrest plan is `docker`. It backs up only these mounted source paths:
+The configured Backrest plans separate always-local data from the intermittently
+available Documents NFS mount. The `docker` plan backs up:
 
 ```text
 /source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data
 /source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json
 /source/scratch/backup/vault
+```
+
+The `documents` plan backs up:
+
+```text
 /source/export/Documents
 ```
 
-The plan runs weekly on Monday using local time, keeps the last snapshot, and skips backups when the selected sources have not changed.
+Both plans run weekly on Monday using local time, keep the last snapshot, and
+skip backups when their selected sources have not changed. If
+`forbearance.home.arpa` is offline, only the `documents` plan is affected.
 
 ## Secrets
 
@@ -71,6 +79,11 @@ Treat `backrest/config.template.json` as the source of truth for repository and 
 The service keeps the shared `docker-compose-security-baseline` limits, `no-new-privileges`, resource limits, PID limits, and read-only source mounts.
 
 `userns_mode: host` is intentional because Backrest must read userns-remapped Docker volume data under `/var/lib/docker/100000.100000`.
+
+The stable `/export` parent is bind-mounted with `rslave` propagation rather
+than mounting `/export/Documents` directly. This allows Backrest to start while
+the systemd NFS automount is unavailable and makes the Documents submount
+visible if it is mounted later.
 
 The Backrest service runs as the dedicated FreeIPA UID/GID `175200010`, which has read access to `/export/Documents` over Kerberized NFS. A one-shot `backrest-init` service owns the named state volumes for that UID before Backrest starts.
 

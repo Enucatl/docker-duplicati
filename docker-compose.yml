@@ -58,7 +58,9 @@ services:
       - ./backrest/render-config.sh:/bootstrap/render-config.sh:ro
 
       # 3. SOURCE DATA (exact host paths only):
-      # /export/Documents is an NFS mount from a machine that is not always on.
+      # /export/Documents is an automounted NFS filesystem from a machine that
+      # is not always on. Bind its stable parent without triggering the mount;
+      # rslave propagates the NFS submount if it becomes available later.
       # Do not let Docker create placeholder host paths when sources are absent.
       - type: bind
         source: /var/lib/docker/100000.100000/volumes/paperless-ai_export/_data
@@ -79,11 +81,12 @@ services:
         bind:
           create_host_path: false
       - type: bind
-        source: /export/Documents
-        target: /source/export/Documents
+        source: /export
+        target: /source/export
         read_only: true
         bind:
           create_host_path: false
+          propagation: rslave
 
     labels:
       - "checkmk_monitor=true"

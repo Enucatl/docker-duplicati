@@ -21,7 +21,21 @@
       "paths": [
         "/source/var/lib/docker/100000.100000/volumes/paperless-ai_export/_data",
         "/source/var/lib/docker/100000.100000/volumes/infra_certificates/_data/keys.json",
-        "/source/scratch/backup/vault",
+        "/source/scratch/backup/vault"
+      ],
+      "schedule": {
+        "cron": "0 0 * * 1",
+        "clock": "CLOCK_LOCAL"
+      },
+      "retention": {
+        "policyKeepLastN": 1
+      },
+      "skipIfUnchanged": true
+    },
+    {
+      "id": "documents",
+      "repo": "b2-enucatl-restic",
+      "paths": [
         "/source/export/Documents"
       ],
       "schedule": {
