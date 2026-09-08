@@ -89,7 +89,6 @@ services:
           propagation: rslave
 
     labels:
-      - "checkmk_monitor=true"
       - "traefik.enable=true"
       - "traefik.http.routers.backrest.rule=Host(`backrest.${DOCKER_DOMAIN}`)"
       - "traefik.http.routers.backrest.entrypoints=https"
